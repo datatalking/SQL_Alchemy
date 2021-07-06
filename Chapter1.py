@@ -9,6 +9,10 @@
 # https://stackoverflow.com/questions/23325669/writting-py-test-for-sqlalchemy-app
 # TODO https://stackoverflow.com/questions/58660378/how-use-pytest-to-unit-test-sqlalchemy-orm-classes
 
+
+# TODO oracle paintstone uses 7818 mc free forever
+
+
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.dialects.postgresql import json
