@@ -13,63 +13,55 @@
 # TODO oracle paintstone uses 7818 mc free forever
 
 
-from sqlalchemy import create_engine
-from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey
+from sqlalchemy import (Column, create_engine, DateTime, ForeignKey, Integer, MetaData, Numeric, Sequence, String, Table)
 from sqlalchemy.dialects.postgresql import json
 from sqlalchemy.dialects.sqlite import json
 from sqlalchemy.dialects.mysql import json
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Sequence
 from datetime import datetime
-from sqlalchemy import DateTime
 
-Base = declarative_base()
-
+metadata = MetaData()
 
 def main():
     create_test_mysql_dbase()
     # TODO find a way to test sqlalchemy.__version__ = version we need
-
-
-class User(Base):
-    """
-    a base class to catalog of user classes and tables
-    """
-    __tablename__ = 'users'
+    create_cookie_dbase()
+    create_users_dbase()
     
-    id = Column(Integer, Sequence('user_id_seq'), primary_key=True)
-    name = Column(String(50))  # TODO vs uuid
-    fullname = Column(String(50))  # TODO vs uuid
-    nickname = Column(String(50))  # TODO vs uuid
-    
-    def __repr__(self):
-        return f"<User(name='{self.name}', fullname='{self.fullname}')>"
-        # converted to f string vs in book example was verbose
-
 
 def create_test_sqlite_dbase():
-    engine = create_engine('sqlite:///:memory:', echo = True)
+    engine = create_engine('sqlite:///:memory:', echo=True)
     # echo True enables logging of generated sql
 
 
 def create_test_postgresql_dbase():
     postgresql_engine = create_engine('postgresql+psycopg2://username:password@localhost:' \
-                           '5432/mydb')
+                                      '5432/mydb')
     connection = postgresql_engine.connect()
     # TODO test pool_recycle (assert !=-1) etc which is default for no timeout vs 3600
     # TODO test echo is xyz
     # TODO test encoding is xyz
     # TODO test isolation_level is xyz
-    
-    
+
+
 def create_test_mysql_dbase():
     mysql_engine = create_engine('mysql+pymsql://cookiemonster:chocolatechip'
-                           '@mysql01.monster.internal/cookies', pool_recyle=3600)
+                                 '@mysql01.monster.internal/cookies', pool_recyle=3600)
     connection = mysql_engine.connect()
     # TODO test pool_recycle (assert !=-1) etc which is default for no timeout vs 3600
     # TODO test echo is xyz
     # TODO test encoding is xyz
     # TODO test isolation_level is xyz
+
+
+def create_cookie_dbase(cookie_id, cookie_name, cookie_recipe_url, cookie_sku, quantity, unit_cost):
+    cookies = Table('cookies', metadata,
+                    Column('cookie_id', Integer(), primary_key=True),
+                    Column('cookie_name', String(50), index=True),
+                    Column('cookie_recipe_url', String(255)),
+                    Column('cookie_sku', String(55)),
+                    Column('quantity', Integer()),
+                    Column('unit_cost', Numeric(12, 2))
+                    )
 
 
 def create_users_dbase(user_id, username, email_address, phone, password, created_on, updated_on):
@@ -86,7 +78,33 @@ def create_users_dbase(user_id, username, email_address, phone, password, create
                   Column('updated_on', DateTime(), default=datetime.now, onupdate=datetime.now)
                   )
 
+
+def create_orders_dbase(orders, order_id, user_id):
+    orders = Table('orders', metadata,
+                   Column('order_id', Integer(), primary_key=True),
+                   Column('user_id', ForeignKey('users.user_id'))
+                   )
+
+
+def create_line_item_dbase(line_items, line_items_id, order_id, cookie_id, quantity, extended_cost):
+    line_items = Table('line_items', metadata,
+                       Column('line_items_id', Integer(), primary_key=True),
+                       Column('order_id', ForeignKey('orders.order_id')),
+                       Column('cookie_id', ForeignKey('cookies.cookie_id')),
+                       Column('quantity', Integer()),
+                       Column('extended_cost', Numeric(12, 2))
+                       )
+
+engine = create_engine('sqlite:///:memory:')
+metadata.create_all(engine)
+
+
+
 # Keys and Constraints
+"""Keys and constraints ensure data requirements, uniquness, primacy, non zero, non negative etc"""
 from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint, CheckConstraint
 
+PrimaryKeyConstraint('user_id', name='user_pk')
+
+UniqueConstraint('username', name='uix_username')
 
