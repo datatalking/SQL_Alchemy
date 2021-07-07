@@ -14,12 +14,14 @@
 
 
 from sqlalchemy import create_engine
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey
 from sqlalchemy.dialects.postgresql import json
 from sqlalchemy.dialects.sqlite import json
 from sqlalchemy.dialects.mysql import json
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Sequence
+from datetime import datetime
+from sqlalchemy import DateTime
 
 Base = declarative_base()
 
@@ -43,7 +45,6 @@ class User(Base):
     def __repr__(self):
         return f"<User(name='{self.name}', fullname='{self.fullname}')>"
         # converted to f string vs in book example was verbose
-    
 
 
 def create_test_sqlite_dbase():
@@ -69,3 +70,23 @@ def create_test_mysql_dbase():
     # TODO test echo is xyz
     # TODO test encoding is xyz
     # TODO test isolation_level is xyz
+
+
+def create_users_dbase(user_id, username, email_address, phone, password, created_on, updated_on):
+    """constrints on String will enable Oracle cx_oracle use"""
+    from sqlalchemy import MetaData
+    metadata = MetaData
+    users = Table('users', metadata,
+                  Column('user_id', Integer(), primary_key=True),
+                  Column('username', String(15), nullable=False, unique=True),
+                  Column('email_address', String(255), nullable=False),
+                  Column('phone', String(20), nullable=False),
+                  Column('password', String(25), nullable=False),
+                  Column('created_on', DateTime(), default=datetime.now),
+                  Column('updated_on', DateTime(), default=datetime.now, onupdate=datetime.now)
+                  )
+
+# Keys and Constraints
+from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint, CheckConstraint
+
+
